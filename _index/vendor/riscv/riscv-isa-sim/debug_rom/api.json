@@ -1,0 +1,1 @@
+{"size":4,"items":{"debug_rom.h":"vendor\\riscv\\riscv-isa-sim\\debug_rom\\debug_rom.h","debug_rom.S":"vendor\\riscv\\riscv-isa-sim\\debug_rom\\debug_rom.S","link.ld":"vendor\\riscv\\riscv-isa-sim\\debug_rom\\link.ld","Makefile":"vendor\\riscv\\riscv-isa-sim\\debug_rom\\Makefile"}}

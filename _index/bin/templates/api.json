@@ -1,0 +1,1 @@
+{"size":6,"items":{"embench_test.yaml.j2":"bin\\templates\\embench_test.yaml.j2","metrics.json.j2":"bin\\templates\\metrics.json.j2","regress_macros.j2":"bin\\templates\\regress_macros.j2","regress_sh.j2":"bin\\templates\\regress_sh.j2","regress_sve.j2":"bin\\templates\\regress_sve.j2","regress_vsif.j2":"bin\\templates\\regress_vsif.j2"}}

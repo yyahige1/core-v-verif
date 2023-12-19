@@ -1,0 +1,1 @@
+{"size":7,"items":{"crt0.S":"cv32e40p\\bsp\\crt0.S","handlers.S":"cv32e40p\\bsp\\handlers.S","link.ld":"cv32e40p\\bsp\\link.ld","link_corev-dv.ld":"cv32e40p\\bsp\\link_corev-dv.ld","Makefile":"cv32e40p\\bsp\\Makefile","syscalls.c":"cv32e40p\\bsp\\syscalls.c","vectors.S":"cv32e40p\\bsp\\vectors.S"}}
