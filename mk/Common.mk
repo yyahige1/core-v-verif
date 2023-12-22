@@ -400,6 +400,9 @@ sanity: hello-world
 ###############################################################################
 # Code generators
 # New agent is pulled from moore.io temp site
+# Downloads and extracts a new UVM agent generator from moore.io, 
+# runs it to generate a new UVM agent in the specified directory, 
+# then cleans up the temporary files.
 new-agent:
 	mkdir -p $(CORE_V_VERIF)/temp
 	wget --no-check-certificate -q https://mooreio.com/packages/uvm_gen.tgz -P $(CORE_V_VERIF)/temp
@@ -504,6 +507,8 @@ endif
 .PHONY: hex
 
 # Shorthand target to only build the firmware using the hex and elf suffix rules above
+# Builds the hex file for the test program
+# Copies the BSP Makefile and builds the BSP objects
 hex: $(SIM_TEST_PROGRAM_RESULTS)/$(TEST_PROGRAM)$(OPT_RUN_INDEX_SUFFIX).hex
 
 bsp:
@@ -555,6 +560,7 @@ $(CV32_RISCV_TESTS_FIRMWARE)/%.o: $(CV32_RISCV_TESTS_FIRMWARE)/%.c
 		-ffreestanding -nostdlib -o $@ $<
 
 # compile and dump RISCV_COMPLIANCE_TESTS only
+# Target rule to build the cv32_riscv_compliance_tests_firmware.elf file
 $(CV32_RISCV_COMPLIANCE_TESTS_FIRMWARE)/cv32_riscv_compliance_tests_firmware.elf: $(CV32_RISCV_COMPLIANCE_TESTS_FIRMWARE_OBJS) $(COMPLIANCE_TEST_OBJS) \
 							$(CV32_RISCV_COMPLIANCE_TESTS_FIRMWARE)/link.ld
 	$(RISCV_EXE_PREFIX)gcc $(CFLAGS) -ffreestanding -nostdlib -o $@ \
@@ -563,9 +569,11 @@ $(CV32_RISCV_COMPLIANCE_TESTS_FIRMWARE)/cv32_riscv_compliance_tests_firmware.elf
 		-Wl,-Bstatic,-T,$(CV32_RISCV_COMPLIANCE_TESTS_FIRMWARE)/link.ld,-Map,$(CV32_RISCV_COMPLIANCE_TESTS_FIRMWARE)/cv32_riscv_compliance_tests_firmware.map,--strip-debug \
 		$(CV32_RISCV_COMPLIANCE_TESTS_FIRMWARE_OBJS) $(COMPLIANCE_TEST_OBJS) -lgcc
 
+# Rule to build the start.o object file
 $(CV32_RISCV_COMPLIANCE_TESTS_FIRMWARE)/start.o: $(CV32_RISCV_COMPLIANCE_TESTS_FIRMWARE)/start.S
 	$(RISCV_EXE_PREFIX)gcc -c $(CFLAGS) -D RUN_COMPLIANCE -o $@ $<
 
+# Rule to build the %.o object files
 $(CV32_RISCV_COMPLIANCE_TESTS_FIRMWARE)/%.o: $(CV32_RISCV_COMPLIANCE_TESTS_FIRMWARE)/%.c
 	$(RISCV_EXE_PREFIX)gcc -c $(CFLAGS) --std=c99 -Wall \
 		$(RISCV_TEST_INCLUDES) \
@@ -581,7 +589,21 @@ $(FIRMWARE)/firmware_unit_test.elf: $(FIRMWARE_OBJS) $(FIRMWARE_UNIT_TEST_OBJS) 
 		-Wl,-Bstatic,-T,$(FIRMWARE)/link.ld,-Map,$(FIRMWARE)/firmware.map,--strip-debug \
 		$(FIRMWARE_OBJS) $(FIRMWARE_UNIT_TEST_OBJS) -lgcc
 # Thales end
-
+# Build the firmware.elf target by linking the object files with the linker script.
+# The firmware.elf target depends on the following object files:
+# - $(FIRMWARE_OBJS)
+# - $(FIRMWARE_TEST_OBJS)
+# - $(COMPLIANCE_TEST_OBJS)
+# - $(FIRMWARE)/link.ld
+# The gcc command is used to perform the linking, with the following options:
+# - $(CFLAGS): Compiler flags
+# - -ffreestanding: Compile without standard library
+# - -nostdlib: Do not use the standard system startup files or libraries
+# - -o $@: Output file name
+# - $(RISCV_TEST_INCLUDES): Include paths for RISC-V tests
+# - -D RUN_COMPLIANCE: Define the RUN_COMPLIANCE macro
+# - -Wl,-Bstatic,-T,$(FIRMWARE)/link.ld,-Map,$(FIRMWARE)/firmware.map,--strip-debug: Linker options
+# - $(FIRMWARE_OBJS) $(FIRMWARE_TEST_OBJS) $(COMPLIANCE_TEST_OBJS) -lgcc: Object files and library dependencies
 $(FIRMWARE)/firmware.elf: $(FIRMWARE_OBJS) $(FIRMWARE_TEST_OBJS) $(COMPLIANCE_TEST_OBJS) $(FIRMWARE)/link.ld
 	$(RISCV_EXE_PREFIX)gcc $(CFLAGS) -ffreestanding -nostdlib -o $@ \
 		$(RISCV_TEST_INCLUDES) \
@@ -595,14 +617,15 @@ $(FIRMWARE)/firmware.elf: $(FIRMWARE_OBJS) $(FIRMWARE_TEST_OBJS) $(COMPLIANCE_TE
 # Thales start
 $(FIRMWARE)/start.o: $(FIRMWARE)/start.S
 ifeq ($(UNIT_TEST_CMD),1)
-ifeq ($(FIRMWARE_UNIT_TEST_OBJS),)
-$(error no existing unit test in argument )
+	ifeq ($(FIRMWARE_UNIT_TEST_OBJS),)
+		$(error no existing unit test in argument )
+	else
+		$(RISCV_EXE_PREFIX)gcc -c $(CFLAGS) -D RUN_COMPLIANCE -DUNIT_TEST_CMD=$(UNIT_TEST_CMD) -DUNIT_TEST=$(UNIT_TEST) -DUNIT_TEST_RET=$(UNIT_TEST)_ret -o $@ $<
+	endif
 else
-	$(RISCV_EXE_PREFIX)gcc -c $(CFLAGS) -D RUN_COMPLIANCE  -DUNIT_TEST_CMD=$(UNIT_TEST_CMD) -DUNIT_TEST=$(UNIT_TEST) -DUNIT_TEST_RET=$(UNIT_TEST)_ret -o $@ $<
+	$(RISCV_EXE_PREFIX)gcc -c $(CFLAGS) -D RUN_COMPLIANCE -DUNIT_TEST_CMD=$(UNIT_TEST_CMD) -o $@ $<
 endif
-else
-	$(RISCV_EXE_PREFIX)gcc -c $(CFLAGS) -D RUN_COMPLIANCE  -DUNIT_TEST_CMD=$(UNIT_TEST_CMD) -o $@ $<
-endif
+# Thales end
 # Thales end
 
 $(FIRMWARE)/%.o: $(FIRMWARE)/%.c
