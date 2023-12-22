@@ -27,12 +27,39 @@
 import riscv_defines::*;
 
 // do not import anything if the simchecker is not used
+// Import DPI-C functions to initialize, step, and handle interrupts, memory 
+// accesses, and register accesses for the RISC-V instruction checker. The 
+// checker compares executed instructions against a golden model.
 // this gets rid of warnings during simulation
-import "DPI-C" function chandle riscv_checker_init(input int boot_addr, input int core_id, input int cluster_id, input string name);
-import "DPI-C" function int     riscv_checker_step(input chandle cpu, input longint simtime, input int cycle, input logic [31:0] pc, input logic [31:0] instr);
-import "DPI-C" function void    riscv_checker_irq(input chandle cpu, input int irq, input int irq_no);
-import "DPI-C" function void    riscv_checker_mem_access(input chandle cpu, input int we, input logic [31:0] addr, input logic [31:0] data);
-import "DPI-C" function void    riscv_checker_reg_access(input chandle cpu, input logic [31:0] addr, input logic [31:0] data);
+import "DPI-C" function chandle riscv_checker_init(
+  input int boot_addr,
+  input int core_id,
+  input int cluster_id,
+  input string name
+);
+import "DPI-C" function int riscv_checker_step(
+  input chandle cpu,
+  input longint simtime,
+  input int cycle,
+  input logic [31:0] pc,
+  input logic [31:0] instr
+);
+import "DPI-C" function void riscv_checker_irq(
+  input chandle cpu,
+  input int irq,
+  input int irq_no
+);
+import "DPI-C" function void riscv_checker_mem_access(
+  input chandle cpu,
+  input int we,
+  input logic [31:0] addr,
+  input logic [31:0] data
+);
+import "DPI-C" function void riscv_checker_reg_access(
+  input chandle cpu,
+  input logic [31:0] addr,
+  input logic [31:0] data
+);
 
 module riscv_simchecker
 (
@@ -79,7 +106,7 @@ module riscv_simchecker
   input  logic        apu_en_ex,
 ////////////////////////////////////////////
   input  logic        ex_valid,
-  input  logic [ 5:0] ex_reg_addr,
+  input  logic [5:0] ex_reg_addr,
 
   input  logic        ex_reg_we,
   input  logic [31:0] ex_reg_wdata,
@@ -94,7 +121,7 @@ module riscv_simchecker
   input  logic        wb_bypass,
 
   input  logic        wb_valid,
-  input  logic [ 5:0] wb_reg_addr,
+  input  logic [5:0] wb_reg_addr,
 
   input  logic        wb_reg_we,
   input  logic [31:0] wb_reg_wdata,
@@ -132,9 +159,17 @@ module riscv_simchecker
     logic        wb_bypass;
     logic        fpu_first;
     int          next_wait;
-    reg_t        regs_write[$];
-    mem_acc_t    mem_access[$];
+    // regs_write and mem_access are queues to hold information about register writes
+    // and memory accesses respectively that occur each cycle. This information is used  
+    // later to check for mismatches against the reference model.
+    reg_t            regs_write[$];
+    mem_acc_t        mem_access[$];
 
+    /**
+     * This file contains the definition of the `new` function and the declaration of various variables and mailboxes used in the simulation checker module.
+     * The `new` function initializes the variables and mailboxes to their default values.
+     * The variables and mailboxes declared in this file are used for tracking simulation progress, handling interrupts, managing floating-point operations, and storing instruction traces.
+     */
     function new ();
       irq        = 1'b0;
       wb_bypass  = 1'b1;

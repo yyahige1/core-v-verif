@@ -191,6 +191,29 @@ module mm_ram
     string                         error_str;
 
     // Common code used by both reads and writes
+    // The setup_transaction function prepares a transaction for the RAM.
+    // It decodes the address, data, write enable, byte enable signals from the 
+    // inputs into a form suitable for the RAM. It handles remapping the debug
+    // address space to the end of the RAM memory map. The transaction type is 
+    // set to T_RAM for RAM transactions.
+    /**
+     * Function: setup_transaction
+     * Description: Sets up the transaction parameters for the memory RAM.
+     *              It assigns the input signals to the corresponding internal signals
+     *              and determines the address decoding based on the debug halt address.
+     * Inputs: data_req_i - Data request input signal
+     *         data_addr_i - Data address input signal
+     *         data_wdata_i - Data write data input signal
+     *         data_we_i - Data write enable input signal
+     *         data_be_i - Data byte enable input signal
+     *         dm_halt_addr_i - Debug halt address input signal
+     * Outputs: data_req_dec - Decoded data request signal
+     *          data_addr_dec - Decoded data address signal
+     *          data_wdata_dec - Decoded data write data signal
+     *          data_we_dec - Decoded data write enable signal
+     *          data_be_dec - Decoded data byte enable signal
+     *          transaction - Transaction type signal (T_RAM)
+     */
     function void setup_transaction();
 
        data_req_dec = data_req_i;
@@ -571,6 +594,11 @@ module mm_ram
 
    // -------------------------------------------------------------
    // Generate a random number using the SystemVerilog random number function
+   // Generate a random 32-bit number rnd_num on the rising edge of 
+   // the clock if rnd_num_req is high. Initialize rnd_num to 0 if 
+   // reset (rst_ni) is low. Use SystemVerilog $urandom function to
+   // generate random number in simulation. Use constant 0 in 
+   // synthesis since $urandom is not synthesizable.
    always_ff @(posedge clk_i, negedge rst_ni) begin : rnd_num_gen
         if (!rst_ni)
             rnd_num <= 32'h0;

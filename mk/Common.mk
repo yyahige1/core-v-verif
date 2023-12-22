@@ -57,6 +57,20 @@ IS_NO=$(if $(filter $(NO_VALS),$(1)),NO,YES)
 # The first resolved variable in order of FIRST,SECOND will be assigned to MY_FLAG
 RESOLVE_FLAG2=$(if $(1),$(1),$(2))
 
+print_variables:
+	@echo "CV_CORE_REPO: $(CV_CORE_REPO)"
+	@echo "RISCVDV_REPO: $(RISCVDV_REPO)"
+	@echo "EMBENCH_REPO: $(EMBENCH_REPO)"
+	@echo "COMPLIANCE_REPO: $(COMPLIANCE_REPO)"
+	@echo "DPI_DASM_SPIKE_REPO: $(DPI_DASM_SPIKE_REPO)"
+	@echo "CV_CORE_PATH: $(CV_CORE_PATH)"
+	@echo "CV_CORE_BRANCH: $(CV_CORE_BRANCH)"
+	@echo "CV_CORE_PKG: $(CV_CORE_PKG)"
+	@echo "CV_CORE_TAG: $(CV_CORE_TAG)"
+	@echo "CV_CORE_HASH: $(CV_CORE_HASH)"
+	@echo "YES_VALS: $(YES_VALS)"
+	@echo "NO_VALS: $(NO_VALS)"
+.PHONY: print_variables
 ###############################################################################
 # Common variables
 BANNER=*******************************************************************************************
@@ -86,38 +100,38 @@ endif
 ###############################################################################
 # Generate command to clone or symlink the core RTL
 ifeq ($(CV_CORE_PATH),)
-  ifeq ($(CV_CORE_BRANCH), master)
-    TMP = git clone $(CV_CORE_REPO) $(CV_CORE_PKG)
-  else
-    TMP = git clone -b $(CV_CORE_BRANCH) --single-branch $(CV_CORE_REPO) $(CV_CORE_PKG)
-  endif
+	ifeq ($(CV_CORE_BRANCH), master)
+		TMP = git clone $(CV_CORE_REPO) $(CV_CORE_PKG)
+	else
+		TMP = git clone -b $(CV_CORE_BRANCH) --single-branch $(CV_CORE_REPO) $(CV_CORE_PKG)
+	endif
 
-  # If a TAG is specified, the HASH is not considered
-  ifeq ($(CV_CORE_TAG), none)
-    ifeq ($(CV_CORE_HASH), head)
-      CLONE_CV_CORE_CMD = $(TMP)
-    else
-      CLONE_CV_CORE_CMD = $(TMP); cd $(CV_CORE_PKG); git checkout $(CV_CORE_HASH)
-    endif
-  else
-    CLONE_CV_CORE_CMD = $(TMP); cd $(CV_CORE_PKG); git checkout tags/$(CV_CORE_TAG)
-  endif
+	# If a TAG is specified, the HASH is not considered
+	ifeq ($(CV_CORE_TAG), none)
+		ifeq ($(CV_CORE_HASH), head)
+			CLONE_CV_CORE_CMD = $(TMP); echo "Cloning CV_CORE_REPO: $(CV_CORE_REPO)"
+		else
+			CLONE_CV_CORE_CMD = $(TMP); cd $(CV_CORE_PKG); git checkout $(CV_CORE_HASH); echo "Checking out CV_CORE_HASH: $(CV_CORE_HASH)"
+		endif
+	else
+		CLONE_CV_CORE_CMD = $(TMP); cd $(CV_CORE_PKG); git checkout tags/$(CV_CORE_TAG); echo "Checking out CV_CORE_TAG: $(CV_CORE_TAG)"
+	endif
 else
-  CLONE_CV_CORE_CMD = ln -s $(CV_CORE_PATH) $(CV_CORE_PKG)
+	CLONE_CV_CORE_CMD = ln -s $(CV_CORE_PATH) $(CV_CORE_PKG); echo "Creating symlink to CV_CORE_PATH: $(CV_CORE_PATH)"
 endif
 
 ###############################################################################
 # Generate command to clone RISCV-DV (Google's random instruction generator)
 ifeq ($(RISCVDV_BRANCH), master)
-  TMP3 = git clone $(RISCVDV_REPO) --recurse $(RISCVDV_PKG)
+	TMP3 = git clone $(RISCVDV_REPO) --recurse $(RISCVDV_PKG)
 else
-  TMP3 = git clone -b $(RISCVDV_BRANCH) --single-branch $(RISCVDV_REPO) --recurse $(RISCVDV_PKG)
+	TMP3 = git clone -b $(RISCVDV_BRANCH) --single-branch $(RISCVDV_REPO) --recurse $(RISCVDV_PKG)
 endif
 
 ifeq ($(RISCVDV_HASH), head)
-  CLONE_RISCVDV_CMD = $(TMP3)
+	CLONE_RISCVDV_CMD = $(TMP3)
 else
-  CLONE_RISCVDV_CMD = $(TMP3); cd $(RISCVDV_PKG); git checkout $(RISCVDV_HASH)
+	CLONE_RISCVDV_CMD = $(TMP3); cd $(RISCVDV_PKG); git checkout $(RISCVDV_HASH)
 endif
 # RISCV-DV repo var end
 
@@ -346,30 +360,46 @@ CV32_RISCV_COMPLIANCE_TESTS_FIRMWARE = $(CORE_TEST_DIR)/cv32_riscv_compliance_te
 RISCV_TESTS                          = $(CORE_TEST_DIR)/riscv_tests
 RISCV_COMPLIANCE_TESTS               = $(CORE_TEST_DIR)/riscv_compliance_tests
 RISCV_TEST_INCLUDES                  = -I$(CORE_TEST_DIR)/riscv_tests/ \
-                                       -I$(CORE_TEST_DIR)/riscv_tests/macros/scalar \
-                                       -I$(CORE_TEST_DIR)/riscv_tests/rv64ui \
-                                       -I$(CORE_TEST_DIR)/riscv_tests/rv64um
+									   -I$(CORE_TEST_DIR)/riscv_tests/macros/scalar \
+									   -I$(CORE_TEST_DIR)/riscv_tests/rv64ui \
+									   -I$(CORE_TEST_DIR)/riscv_tests/rv64um
 CV32_RISCV_TESTS_FIRMWARE_OBJS       = $(addprefix $(CV32_RISCV_TESTS_FIRMWARE)/, \
-                                         start.o print.o sieve.o multest.o stats.o)
+										 start.o print.o sieve.o multest.o stats.o)
 CV32_RISCV_COMPLIANCE_TESTS_FIRMWARE_OBJS = $(addprefix $(CV32_RISCV_COMPLIANCE_TESTS_FIRMWARE)/, \
-                                              start.o print.o sieve.o multest.o stats.o)
+											  start.o print.o sieve.o multest.o stats.o)
 RISCV_TESTS_OBJS         = $(addsuffix .o, \
-                             $(basename $(wildcard $(RISCV_TESTS)/rv32ui/*.S)) \
-                             $(basename $(wildcard $(RISCV_TESTS)/rv32um/*.S)) \
-                             $(basename $(wildcard $(RISCV_TESTS)/rv32uc/*.S)))
+							 $(basename $(wildcard $(RISCV_TESTS)/rv32ui/*.S)) \
+							 $(basename $(wildcard $(RISCV_TESTS)/rv32um/*.S)) \
+							 $(basename $(wildcard $(RISCV_TESTS)/rv32uc/*.S)))
 FIRMWARE_OBJS            = $(addprefix $(FIRMWARE)/, \
-                             start.o print.o sieve.o multest.o stats.o)
+							 start.o print.o sieve.o multest.o stats.o)
 FIRMWARE_TEST_OBJS       = $(addsuffix .o, \
-                             $(basename $(wildcard $(RISCV_TESTS)/rv32ui/*.S)) \
-                             $(basename $(wildcard $(RISCV_TESTS)/rv32um/*.S)) \
-                             $(basename $(wildcard $(RISCV_TESTS)/rv32uc/*.S)))
+							 $(basename $(wildcard $(RISCV_TESTS)/rv32ui/*.S)) \
+							 $(basename $(wildcard $(RISCV_TESTS)/rv32um/*.S)) \
+							 $(basename $(wildcard $(RISCV_TESTS)/rv32uc/*.S)))
 FIRMWARE_SHORT_TEST_OBJS = $(addsuffix .o, \
-                             $(basename $(wildcard $(RISCV_TESTS)/rv32ui/*.S)) \
-                             $(basename $(wildcard $(RISCV_TESTS)/rv32um/*.S)))
+							 $(basename $(wildcard $(RISCV_TESTS)/rv32ui/*.S)) \
+							 $(basename $(wildcard $(RISCV_TESTS)/rv32um/*.S)))
 COMPLIANCE_TEST_OBJS     = $(addsuffix .o, \
-                             $(basename $(wildcard $(RISCV_COMPLIANCE_TESTS)/*.S)))
+							 $(basename $(wildcard $(RISCV_COMPLIANCE_TESTS)/*.S)))
 
-
+$(warning CORE_TEST_DIR set to $(CORE_TEST_DIR))
+$(warning BSP set to $(BSP))
+$(warning FIRMWARE set to $(FIRMWARE))
+$(warning VERI_FIRMWARE set to $(VERI_FIRMWARE))
+$(warning ASM_PROG set to $(ASM_PROG))
+$(warning CV32_RISCV_TESTS_FIRMWARE set to $(CV32_RISCV_TESTS_FIRMWARE))
+$(warning CV32_RISCV_COMPLIANCE_TESTS_FIRMWARE set to $(CV32_RISCV_COMPLIANCE_TESTS_FIRMWARE))
+$(warning RISCV_TESTS set to $(RISCV_TESTS))
+$(warning RISCV_COMPLIANCE_TESTS set to $(RISCV_COMPLIANCE_TESTS))
+$(warning RISCV_TEST_INCLUDES set to $(RISCV_TEST_INCLUDES))
+$(warning CV32_RISCV_TESTS_FIRMWARE_OBJS set to $(CV32_RISCV_TESTS_FIRMWARE_OBJS))
+$(warning CV32_RISCV_COMPLIANCE_TESTS_FIRMWARE_OBJS set to $(CV32_RISCV_COMPLIANCE_TESTS_FIRMWARE_OBJS))
+$(warning RISCV_TESTS_OBJS set to $(RISCV_TESTS_OBJS))
+$(warning FIRMWARE_OBJS set to $(FIRMWARE_OBJS))
+$(warning FIRMWARE_TEST_OBJS set to $(FIRMWARE_TEST_OBJS))
+$(warning FIRMWARE_SHORT_TEST_OBJS set to $(FIRMWARE_SHORT_TEST_OBJS))
+$(warning COMPLIANCE_TEST_OBJS set to $(COMPLIANCE_TEST_OBJS))
 # Thales verilator testbench compilation start
 
 SUPPORTED_COMMANDS := vsim-firmware-unit-test questa-unit-test questa-unit-test-gui dsim-unit-test vcs-unit-test

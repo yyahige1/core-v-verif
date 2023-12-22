@@ -40,6 +40,12 @@ _start:
 .section .text
 _start_main:
 
+/**
+ * This assembly code verifies the functionality of uncompressed load and store instructions.
+ * It performs various write and read operations on memory locations and checks the correctness of the data.
+ * The code includes tests for load and store instructions such as sw, lw, sb, lb, lbu, sh, lh, and lhu.
+ * If any of the tests fail, the code branches to the "test_fail" label.
+ */
 # Verify uncompressed load and store
     # Write/read mem[2047]=12, mem[2046]=34, mem[2045]=56, mem[2044]=78
     li a1, 0x12345678
